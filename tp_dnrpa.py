@@ -306,6 +306,9 @@ def preparar_dataset(df):
     vacios = out[columnas_texto].apply(lambda col: col.str.upper().isin(["NAN", "NONE", ""])).any(axis=1)
     out = out[~vacios]
     out = out[(out["antiguedad_vehiculo"] >= 0) & (out["antiguedad_vehiculo"] <= 50)]
+    # el año se lee como decimal por los vacíos del dato crudo; ya sin vacíos, va como entero
+    # (si no, sale "2018.0" en el CSV y Power BI lo toma como decimal)
+    out[["anio_modelo", "antiguedad_vehiculo"]] = out[["anio_modelo", "antiguedad_vehiculo"]].astype(int)
     return out.reset_index(drop=True)
 
 
