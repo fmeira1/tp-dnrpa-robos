@@ -27,8 +27,11 @@ st.caption("Datos abiertos DNRPA - Ministerio de Justicia | Modelo XGBoost + sco
 col1, col2, col3 = st.columns(3)
 marca = col1.selectbox("Marca", sorted(df["marca"].unique()),
                        index=sorted(df["marca"].unique()).index("VOLKSWAGEN"))
-modelos = sorted(df[df["marca"] == marca]["modelo"].unique())
-modelo_auto = col2.selectbox("Modelo", modelos)
+modelos_marca = df[df["marca"] == marca]["modelo"]
+modelos = sorted(modelos_marca.unique())
+# arranca en el modelo con más trámites de la marca (no en el primero alfabético,
+# que a veces es un código suelto como "0")
+modelo_auto = col2.selectbox("Modelo", modelos, index=modelos.index(modelos_marca.mode()[0]))
 
 # a partir de acá, todo se filtra por marca + modelo: un Bora no se vende desde 2014,
 # así que no tiene sentido dejar elegir 2024, ni mostrarlo como "Nacional" si acá
