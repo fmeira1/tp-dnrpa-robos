@@ -1,6 +1,6 @@
 """
 Herramienta interactiva del TP: cotizador de riesgo de robo de un vehículo.
-Requiere haber corrido antes `python tp_dnrpa.py` (genera el modelo y el dataset limpio).
+Requiere haber corrido antes `python tp_dnrpa.py` (genera el modelo y base_limpia.csv).
 
 Ejecutar:  python -m streamlit run app_dnrpa.py
 """
@@ -8,14 +8,14 @@ Ejecutar:  python -m streamlit run app_dnrpa.py
 import pandas as pd
 import streamlit as st
 
-from tp_dnrpa import ARCHIVO_LIMPIO, ANIO_ACTUAL, cargar_cotizador
+from tp_dnrpa import ARCHIVO_FINAL, ANIO_ACTUAL, cargar_cotizador
 
 st.set_page_config(page_title="Riesgo de robo vehicular", page_icon="🚗", layout="wide")
 
 
 @st.cache_resource
 def cargar():
-    return cargar_cotizador(), pd.read_csv(ARCHIVO_LIMPIO)
+    return cargar_cotizador(), pd.read_csv(ARCHIVO_FINAL)
 
 
 cotizar, df = cargar()

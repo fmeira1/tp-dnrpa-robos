@@ -7,7 +7,7 @@ Dataset: "DNRPA. Robos y recuperos de autos"
          https://datos.jus.gob.ar/dataset/robos-y-recuperos-de-autos
 
 Uso (desde la carpeta donde está este archivo):
-    pip install pandas numpy scikit-learn xgboost matplotlib seaborn scipy requests joblib streamlit
+    pip install pandas numpy scikit-learn xgboost matplotlib seaborn scipy requests joblib streamlit xlsxwriter
     python tp_dnrpa.py            -> descarga, limpia, hace EDA, entrena y muestra cotizaciones de ejemplo
     python -m streamlit run app_dnrpa.py    -> abre la herramienta interactiva (cotizador)
 
@@ -40,7 +40,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 API_PORTAL = "https://datos.jus.gob.ar/api/3/action/package_show?id=robos-y-recuperos-de-autos"
 ANIO_DESDE = 2021          # se usan los últimos años (acordado en el grupo: ~5 años)
 CARPETA_DATOS = "datos"    # acá se guardan los archivos descargados (caché)
-ARCHIVO_LIMPIO = "dataset_limpio.csv"
+ARCHIVO_LIMPIO = "dataset_limpio.csv"   # primera limpieza (este script)
+ARCHIVO_FINAL = "base_limpia.csv"       # limpieza ampliada (limpieza_completa.py): la que usan el modelo y la app
 ARCHIVO_MODELO = "modelo_scoring_recupero.joblib"
 ANIO_ACTUAL = 2026
 
@@ -414,7 +415,7 @@ def cargar_cotizador():
     """Carga modelo y dataset limpio; devuelve la función cotizar()."""
     paquete = joblib.load(ARCHIVO_MODELO)
     modelo, categorias = paquete["modelo"], paquete["categorias"]
-    ref = pd.read_csv(ARCHIVO_LIMPIO)
+    ref = pd.read_csv(ARCHIVO_FINAL)
     freq_marca = ref["marca"].value_counts(normalize=True).to_dict()
     freq_prov = ref["provincia"].value_counts(normalize=True).to_dict()
 
@@ -496,6 +497,12 @@ if __name__ == "__main__":
     limpio.to_csv(ARCHIVO_LIMPIO, index=False)
     print(f"  {len(limpio):,} registros válidos guardados en {ARCHIVO_LIMPIO}")
 
+    # Segunda pasada (limpieza_completa.py): corrige modelos decodificados, reubica
+    # modelos cargados como marca y agrupa el tipo de vehículo en 7 categorías.
+    from limpieza_completa import ejecutar_pipeline
+    ejecutar_pipeline(ARCHIVO_LIMPIO, "base_limpia.xlsx", ARCHIVO_FINAL)
+    limpio = pd.read_csv(ARCHIVO_FINAL, parse_dates=["fecha"])
+
     print("\n3) Análisis exploratorio ...")
     analisis_exploratorio(limpio)
 
@@ -505,9 +512,9 @@ if __name__ == "__main__":
     print("\n5) Ejemplos de cotización ...")
     cotizar = cargar_cotizador()
     ejemplos = [
-        ("VOLKSWAGEN", "SEDAN 5 PUERTAS", "Nacional", "Buenos Aires", 2012),
-        ("TOYOTA", "SEDAN 4 PUERTAS", "Importado", "Ciudad Autónoma de Buenos Aires", 2022),
-        ("HONDA", "SEDAN 4 PUERTAS", "Importado", "Entre Ríos", 2020),
+        ("VOLKSWAGEN", "Auto", "Nacional", "Buenos Aires", 2012),
+        ("TOYOTA", "Auto", "Importado", "Ciudad Autónoma de Buenos Aires", 2022),
+        ("HONDA", "Auto", "Importado", "Entre Ríos", 2020),
     ]
     for e in ejemplos:
         mostrar_cotizacion(e, cotizar(*e))
